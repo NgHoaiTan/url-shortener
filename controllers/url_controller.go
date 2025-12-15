@@ -3,6 +3,7 @@ package controllers
 import (
 	"URL-Shortener-Service/dtos"
 	"URL-Shortener-Service/services"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,41 @@ func (c *URLController) CreateShortURL(ctx *gin.Context) {
 		Success: true,
 		Data:    result,
 		Message: "Short URL created successfully",
+	})
+}
+
+func (c *URLController) GetURLInfo(ctx *gin.Context) {
+	shortCode := ctx.Param("shortCode")
+
+	if shortCode == "" {
+		ctx.JSON(http.StatusBadRequest, dtos.ErrorResponse{
+			Error:   "Invalid request",
+			Message: "Short code is required",
+		})
+		return
+	}
+
+	info, err := c.service.GetURLInfo(shortCode, c.baseURL)
+	if err != nil {
+		if errors.Is(err, services.ErrShortURLNotFound) {
+			ctx.JSON(http.StatusNotFound, dtos.ErrorResponse{
+				Error:   "Short URL not found",
+				Message: err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, dtos.ErrorResponse{
+			Error:   "Failed to get URL info",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dtos.SuccessResponse{
+		Success: true,
+		Data:    info,
+		Message: "URL info retrieved successfully",
 	})
 }
 

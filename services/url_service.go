@@ -20,6 +20,7 @@ const (
 type URLService interface {
 	CreateShortURL(req *dtos.CreateShortURLRequest, baseURL string) (*dtos.ShortURLResponse, error)
 	GetOriginalURL(shortCode string) (string, error)
+	GetURLInfo(shortCode string, baseURL string) (*dtos.URLInfoResponse, error)
 }
 
 type urlService struct {
@@ -29,6 +30,8 @@ type urlService struct {
 func NewURLService(repo repositories.URLRepository) URLService {
 	return &urlService{repo: repo}
 }
+
+var ErrShortURLNotFound = errors.New("short URL not found")
 
 func (s *urlService) CreateShortURL(req *dtos.CreateShortURLRequest, baseURL string) (*dtos.ShortURLResponse, error) {
 	existingURL, err := s.repo.FindByOriginalURL(req.OriginalURL)
@@ -85,6 +88,27 @@ func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
 	}()
 
 	return url.OriginalURL, nil
+}
+
+func (s *urlService) GetURLInfo(shortCode string, baseURL string) (*dtos.URLInfoResponse, error) {
+
+	url, err := s.repo.FindByShortCode(shortCode)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrShortURLNotFound
+		}
+		return nil, fmt.Errorf("failed to find short URL: %w", err)
+	}
+
+	return &dtos.URLInfoResponse{
+		ID:          url.ID,
+		ShortCode:   url.ShortCode,
+		OriginalURL: url.OriginalURL,
+		ShortURL:    baseURL + "/" + url.ShortCode,
+		ClickCount:  url.ClickCount,
+		CreatedAt:   url.CreatedAt,
+		UpdatedAt:   url.UpdatedAt,
+	}, nil
 }
 
 func (s *urlService) buildResponse(url *models.ShortURL, baseURL string) *dtos.ShortURLResponse {

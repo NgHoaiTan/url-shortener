@@ -15,6 +15,16 @@ type ShortURLResponse struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+type URLInfoResponse struct {
+	ID          uint      `json:"id"`
+	ShortCode   string    `json:"short_code"`
+	OriginalURL string    `json:"original_url"`
+	ShortURL    string    `json:"short_url"`
+	ClickCount  uint64    `json:"click_count"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message,omitempty"`
