@@ -14,5 +14,7 @@ func SetupRoutes(urlController *controllers.URLController) *gin.Engine {
 		api.POST("/shorten", urlController.CreateShortURL)
 	}
 
+	router.GET("/:shortCode", urlController.RedirectToOriginalURL)
+
 	return router
 }

@@ -46,3 +46,26 @@ func (c *URLController) CreateShortURL(ctx *gin.Context) {
 		Message: "Short URL created successfully",
 	})
 }
+
+func (c *URLController) RedirectToOriginalURL(ctx *gin.Context) {
+	shortCode := ctx.Param("shortCode")
+
+	if shortCode == "" {
+		ctx.JSON(http.StatusBadRequest, dtos.ErrorResponse{
+			Error:   "Invalid request",
+			Message: "Short code is required",
+		})
+		return
+	}
+
+	originalURL, err := c.service.GetOriginalURL(shortCode)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, dtos.ErrorResponse{
+			Error:   "Short URL not found",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.Redirect(http.StatusFound, originalURL)
+}

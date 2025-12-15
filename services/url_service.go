@@ -7,6 +7,7 @@ import (
 	"URL-Shortener-Service/utils"
 	"errors"
 	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +19,7 @@ const (
 
 type URLService interface {
 	CreateShortURL(req *dtos.CreateShortURLRequest, baseURL string) (*dtos.ShortURLResponse, error)
+	GetOriginalURL(shortCode string) (string, error)
 }
 
 type urlService struct {
@@ -65,6 +67,24 @@ func (s *urlService) CreateShortURL(req *dtos.CreateShortURLRequest, baseURL str
 	}
 
 	return nil, errors.New("failed to create short URL after max retries")
+}
+
+func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
+	url, err := s.repo.FindByShortCode(shortCode)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", errors.New("short URL not found")
+		}
+		return "", fmt.Errorf("failed to find short URL: %w", err)
+	}
+
+	go func() {
+		if err := s.repo.IncrementClickCount(shortCode); err != nil {
+			log.Printf("failed to increment click count: %v", err)
+		}
+	}()
+
+	return url.OriginalURL, nil
 }
 
 func (s *urlService) buildResponse(url *models.ShortURL, baseURL string) *dtos.ShortURLResponse {
