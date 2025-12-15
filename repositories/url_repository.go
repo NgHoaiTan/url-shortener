@@ -1,1 +1,33 @@
 package repositories
+
+import (
+	"URL-Shortener-Service/models"
+
+	"gorm.io/gorm"
+)
+
+type URLRepository interface {
+	Create(url *models.ShortURL) error
+	FindByOriginalURL(originalURL string) (*models.ShortURL, error)
+}
+
+type urlRepository struct {
+	db *gorm.DB
+}
+
+func NewURLRepository(db *gorm.DB) URLRepository {
+	return &urlRepository{db: db}
+}
+
+func (r *urlRepository) Create(url *models.ShortURL) error {
+	return r.db.Create(url).Error
+}
+
+func (r *urlRepository) FindByOriginalURL(originalURL string) (*models.ShortURL, error) {
+	var url models.ShortURL
+	err := r.db.Where("original_url = ?", originalURL).First(&url).Error
+	if err != nil {
+		return nil, err
+	}
+	return &url, nil
+}
