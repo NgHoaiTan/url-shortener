@@ -12,7 +12,8 @@ func SetupRoutes(urlController *controllers.URLController) *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.POST("/shorten", urlController.CreateShortURL)
-		api.GET("/info/:shortCode", urlController.GetURLInfo)
+		api.GET("/urls/:shortCode", urlController.GetURLInfo)
+		api.GET("/urls", urlController.ListURLs)
 	}
 
 	router.GET("/:shortCode", urlController.RedirectToOriginalURL)

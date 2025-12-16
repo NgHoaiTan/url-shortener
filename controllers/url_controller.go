@@ -105,3 +105,30 @@ func (c *URLController) RedirectToOriginalURL(ctx *gin.Context) {
 
 	ctx.Redirect(http.StatusFound, originalURL)
 }
+
+func (c *URLController) ListURLs(ctx *gin.Context) {
+	var req dtos.ListURLsRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, dtos.ErrorResponse{
+			Error:   "Invalid request",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	response, err := c.service.ListURLs(&req, c.baseURL)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dtos.ErrorResponse{
+			Error:   "Failed to list URLs",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dtos.SuccessResponse{
+		Success: true,
+		Data:    response,
+		Message: "URLs retrieved successfully",
+	})
+}

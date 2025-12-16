@@ -21,6 +21,7 @@ type URLService interface {
 	CreateShortURL(req *dtos.CreateShortURLRequest, baseURL string) (*dtos.ShortURLResponse, error)
 	GetOriginalURL(shortCode string) (string, error)
 	GetURLInfo(shortCode string, baseURL string) (*dtos.URLInfoResponse, error)
+	ListURLs(req *dtos.ListURLsRequest, baseURL string) (*dtos.ListURLsResponse, error)
 }
 
 type urlService struct {
@@ -114,9 +115,76 @@ func (s *urlService) GetURLInfo(shortCode string, baseURL string) (*dtos.URLInfo
 func (s *urlService) buildResponse(url *models.ShortURL, baseURL string) *dtos.ShortURLResponse {
 	return &dtos.ShortURLResponse{
 		ID:          url.ID,
+		ShortCode:   url.ShortCode,
 		OriginalURL: url.OriginalURL,
 		ShortURL:    baseURL + "/" + url.ShortCode,
 		ClickCount:  url.ClickCount,
 		CreatedAt:   url.CreatedAt,
 	}
+}
+
+func (s *urlService) ListURLs(req *dtos.ListURLsRequest, baseURL string) (*dtos.ListURLsResponse, error) {
+	if req.Page < 1 {
+		req.Page = 1
+	}
+	if req.PageSize < 1 {
+		req.PageSize = 10
+	}
+	if req.PageSize > 100 {
+		req.PageSize = 100
+	}
+	allowedSort := map[string]bool{
+		"created_at":  true,
+		"updated_at":  true,
+		"click_count": true,
+	}
+
+	if req.SortBy == "" || !allowedSort[req.SortBy] {
+		req.SortBy = "created_at"
+	}
+
+	if req.Order != "asc" && req.Order != "desc" {
+		req.Order = "desc"
+	}
+
+	offset := (req.Page - 1) * req.PageSize
+
+	urls, err := s.repo.FindAll(offset, req.PageSize, req.SortBy, req.Order, req.Search)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch URLs: %w", err)
+	}
+
+	totalCount, err := s.repo.Count(req.Search)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count URLs: %w", err)
+	}
+
+	urlInfos := make([]dtos.URLInfoResponse, len(urls))
+	for i, url := range urls {
+		urlInfos[i] = dtos.URLInfoResponse{
+			ID:          url.ID,
+			ShortCode:   url.ShortCode,
+			OriginalURL: url.OriginalURL,
+			ShortURL:    baseURL + "/" + url.ShortCode,
+			ClickCount:  url.ClickCount,
+			CreatedAt:   url.CreatedAt,
+			UpdatedAt:   url.UpdatedAt,
+		}
+	}
+
+	totalPages := int(totalCount) / req.PageSize
+	if int(totalCount)%req.PageSize > 0 {
+		totalPages++
+	}
+
+	return &dtos.ListURLsResponse{
+		URLs:       urlInfos,
+		TotalCount: totalCount,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		TotalPages: totalPages,
+		SortBy:     req.SortBy,
+		Order:      req.Order,
+		Search:     req.Search,
+	}, nil
 }
