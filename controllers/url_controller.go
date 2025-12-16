@@ -3,8 +3,10 @@ package controllers
 import (
 	"URL-Shortener-Service/dtos"
 	"URL-Shortener-Service/services"
+	"URL-Shortener-Service/utils"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +23,19 @@ func NewURLController(service services.URLService, baseURL string) *URLControlle
 	}
 }
 
+func isValidationError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if strings.Contains(err.Error(), "URL validation failed") {
+		return true
+	}
+
+	return errors.Is(err, utils.ErrInvalidURL) ||
+		errors.Is(err, utils.ErrSelfShortening) ||
+		errors.Is(err, utils.ErrUnsupportedScheme)
+}
+
 func (c *URLController) CreateShortURL(ctx *gin.Context) {
 	var req dtos.CreateShortURLRequest
 
@@ -34,6 +49,14 @@ func (c *URLController) CreateShortURL(ctx *gin.Context) {
 
 	result, err := c.service.CreateShortURL(&req, c.baseURL)
 	if err != nil {
+		if isValidationError(err) {
+			ctx.JSON(http.StatusBadRequest, dtos.ErrorResponse{
+				Error:   "URL validation failed",
+				Message: err.Error(),
+			})
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, dtos.ErrorResponse{
 			Error:   "Failed to create short URL",
 			Message: err.Error(),

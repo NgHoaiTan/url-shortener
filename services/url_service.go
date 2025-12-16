@@ -25,16 +25,24 @@ type URLService interface {
 }
 
 type urlService struct {
-	repo repositories.URLRepository
+	repo    repositories.URLRepository
+	baseURL string
 }
 
-func NewURLService(repo repositories.URLRepository) URLService {
-	return &urlService{repo: repo}
+func NewURLService(repo repositories.URLRepository, baseURL string) URLService {
+	return &urlService{
+		repo:    repo,
+		baseURL: baseURL,
+	}
 }
 
 var ErrShortURLNotFound = errors.New("short URL not found")
 
 func (s *urlService) CreateShortURL(req *dtos.CreateShortURLRequest, baseURL string) (*dtos.ShortURLResponse, error) {
+	if err := utils.ValidateURL(req.OriginalURL, s.baseURL); err != nil {
+		return nil, fmt.Errorf("URL validation failed: %w", err)
+	}
+
 	existingURL, err := s.repo.FindByOriginalURL(req.OriginalURL)
 	if err == nil && existingURL != nil {
 		return s.buildResponse(existingURL, baseURL), nil

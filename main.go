@@ -25,7 +25,7 @@ func main() {
 	}
 
 	urlRepo := repositories.NewURLRepository(db)
-	urlService := services.NewURLService(urlRepo)
+	urlService := services.NewURLService(urlRepo, baseURL)
 	urlController := controllers.NewURLController(urlService, baseURL)
 
 	router := routes.SetupRoutes(urlController)
