@@ -3,27 +3,47 @@
 *.dll
 *.so
 *.dylib
+main
+
 *.test
+
 *.out
 
-.env
-.env.*
-!.env.example
+vendor/
 
-*.log
+go.work
+
+.env
+.env.local
+.env.*.local
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
 
 .idea/
-.vscode/
-*.swp
-*.swo
-*.swn
+*.iml
+*.iws
+*.ipr
 
 .DS_Store
 Thumbs.db
 
-coverage.out
-*.coverprofile
-*.prof
+*.log
+logs/
 
 tmp/
 temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+postgres_data/
+
+dist/
+build/
+

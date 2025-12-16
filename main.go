@@ -19,9 +19,14 @@ func main() {
 	}
 	log.Println("Database connected successfully")
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	baseURL := os.Getenv("BASE_URL")
 	if baseURL == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = "http://localhost:" + port
 	}
 
 	urlRepo := repositories.NewURLRepository(db)
@@ -30,8 +35,9 @@ func main() {
 
 	router := routes.SetupRoutes(urlController)
 
-	log.Println("Server is running on port 8080")
-	if err := router.Run(":8080"); err != nil {
+	log.Printf("Server is running on port %s", port)
+	log.Printf("Access the service at: %s", baseURL)
+	if err := router.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server: ", err)
 	}
 }
