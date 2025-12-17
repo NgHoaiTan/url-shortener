@@ -498,7 +498,7 @@ func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
 - Luôn có chiến lược fallback
 ---
 
-### Challenge 4: Click Tracking Performance
+### Challenge 2: Click Tracking Performance
 
 **Vấn đề:**
 - Redirect phải nhanh (< 100ms)
@@ -535,7 +535,7 @@ func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
 
 ---
 
-#### 3. **No Caching Layer**
+#### 2. **No Caching Layer**
 **Vấn đề:**
 - Mọi redirect đều hit database
 - Popular URLs bị query nhiều lần
@@ -546,8 +546,8 @@ func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
 
 ---
 
-#### 5. **No Analytics/Metrics**
-❌ **Vấn đề:**
+#### 3. **No Analytics/Metrics**
+**Vấn đề:**
 - Chỉ có click count
 - Không track: user agent, referrer, geo location, timestamp
 
@@ -557,8 +557,8 @@ func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
 
 ---
 
-#### 6. **No URL Expiration**
-❌ **Vấn đề:**
+#### 4. **No URL Expiration**
+**Vấn đề:**
 - URLs tồn tại mãi mãi
 
 **Impact:**
@@ -607,7 +607,7 @@ func (s *urlService) GetOriginalURL(shortCode string) (string, error) {
 
 ---
 
-#### 6. **URL Expiration**
+#### 5. **URL Expiration**
 
 **Benefits:**
 - Temporary campaigns
